@@ -31,9 +31,9 @@ class bonkClient extends EventEmitter {
         setAdressByUrl: this.setAdressByUrl.bind(this),
         setAdressByName: this.setAdressByName.bind(this),
       });
-    } catch (error) {
-      console.error("Erro de login:", error.message);
-      throw error;
+    } catch (e) {
+      console.error("Erro de login:", e.message);
+      throw e;
     }
   }
 
