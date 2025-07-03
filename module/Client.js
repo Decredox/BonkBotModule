@@ -1,5 +1,5 @@
 const tools = require("./services/tools.js");
-const ws = require("./services/ws.js");
+const ws = require("./services/WSbonk.js");
 
 function validateToken(fn) {
   return async function (...args) {
