@@ -1,5 +1,5 @@
-const { utils, WebSocketManager } = require("./utils/utils.js");
-const EventEmitter = require("events");
+const tools = require("./services/tools.js");
+const ws = require("./services/ws.js");
 
 function validateToken(fn) {
   return async function (...args) {
@@ -11,11 +11,11 @@ function validateToken(fn) {
   };
 }
 
-class bonkClient extends EventEmitter {
+class bonkClient extends ws {
   constructor() {
     super();
-    this.UTILS = utils;
-    this.WebSocketManager = WebSocketManager;
+    this.TOOL = tools;
+    this.WS = ws;
     this.client = {};
     this.servers = [];
     this.count = 0;
@@ -23,7 +23,7 @@ class bonkClient extends EventEmitter {
 
   async login(bclient) {
     try {
-      const res = await this.UTILS.login(bclient.username, bclient.password);
+      const res = await this.TOOL.login(bclient.username, bclient.password);
       this.client = {
         token: res.token,
         username: res.username,
@@ -31,7 +31,7 @@ class bonkClient extends EventEmitter {
         guest: false,
         version: 49,
       };
-      console.log("[BonkClient]  Usuário autenticado com sucesso");
+      console.log("[BonkClient] Usuário autenticado com sucesso");
 
       this.emit("ready", {
         setAdressByUrl: this.setAdressByUrl.bind(this),
@@ -39,7 +39,7 @@ class bonkClient extends EventEmitter {
         connect: this.connect.bind(this),
       });
     } catch (e) {
-      console.error("[BonkClient]  Erro de login:", e.message);
+      console.error("[BonkClient] Erro de login:", e.message);
       throw e;
     }
   }
@@ -51,18 +51,30 @@ class bonkClient extends EventEmitter {
       joinID: serverAddress,
       dbid: 2,
       roomPassword: "",
-      peerID: this.UTILS.generatePeerId(),
+      peerID: this.TOOL.generatePeerId(),
     };
     delete payload.username;
-
     return { server, payload };
   }
 
-  async connect(p) {
-    const wsInstance = new this.WebSocketManager(p.server, p.payload);
-    await wsInstance.connect(); // espera a conexão concluir antes de continuar
-    this.servers.push({ id: this.count++, s: wsInstance });
-    return wsInstance;
+  async connect(room) {
+    try {
+      if (!room) {
+        throw new Error("Nenhuma sala inserida!");
+      }
+      const count = this.count++;
+      this.servers.push({ id: count, s: wsInstance });
+      const wsInstance = new this.WS(
+        this.servers[count].id,
+        room.server,
+        room.payload,
+      );
+      await wsInstance.connect();
+
+      return wsInstance;
+    } catch (e) {
+      console.error("Erro ao conectar ao websocket:", e.message);
+    }
   }
 
   async setAdressByUrl(roomLink) {
@@ -78,16 +90,14 @@ class bonkClient extends EventEmitter {
         );
       }
 
-      console.log(`[BonkClient] Conectando à sala: ${code}`);
-      const server = await this.UTILS.getDataFromLink(code);
-
+      const server = await this.TOOL.getDataFromLink(code);
       if (!server || server.error || server.r == "failed") {
         throw new Error(
           server?.error ||
             `[BonkClient] Sala ${code} não encontrada ou inacessível`,
         );
       }
-
+      console.log(`[BonkClient] Sala encontrada: ${code}`);
       const payload = this._createServerPayload(server.address, server.server);
 
       return payload;
@@ -100,7 +110,7 @@ class bonkClient extends EventEmitter {
   async setAdressByName(roomName) {
     try {
       console.log(`🔍 Buscando sala por nome: "${roomName}"`);
-      const rooms = await this.UTILS.getAllRooms(this.client.token);
+      const rooms = await this.TOOL.getAllRooms(this.client.token);
       if (!rooms || rooms.error) {
         throw new Error(
           rooms?.error || "[BonkClient] Erro ao buscar lista de salas",
@@ -121,7 +131,7 @@ class bonkClient extends EventEmitter {
         `[BonkClient]  Sala encontrada - ID: ${selectedRoom.id}, Nome: "${selectedRoom.roomname}"`,
       );
 
-      const server = await this.UTILS.getRoomInfo(selectedRoom.id);
+      const server = await this.TOOL.getRoomInfo(selectedRoom.id);
       if (!server || server.error) {
         throw new Error(
           server?.error || "[BonkClient] Erro ao obter informações da sala",
@@ -130,7 +140,7 @@ class bonkClient extends EventEmitter {
 
       const payload = this._createServerPayload(server.address, server.server);
       console.log(
-        `[BonkClient] Conectado com sucesso à sala "${roomName}" (ID: ${selectedRoom.id})`,
+        `[BonkClient] Sala encontrada: "${roomName}" (ID: ${selectedRoom.id})`,
       );
       return payload;
     } catch (e) {
