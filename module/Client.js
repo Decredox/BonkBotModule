@@ -63,12 +63,12 @@ class bonkClient extends ws {
         throw new Error("Nenhuma sala inserida!");
       }
       const count = this.count++;
-      this.servers.push({ id: count, s: wsInstance });
       const wsInstance = new this.WS(
-        this.servers[count].id,
+        count,
         room.server,
         room.payload,
       );
+      this.servers.push({ id: count, s: wsInstance });
       await wsInstance.connect();
 
       return wsInstance;
