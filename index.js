@@ -3,8 +3,8 @@ const BonkClient = require("./module/Client.js");
 const client = new BonkClient();
 
 client.on("ready", async (bot) => {
-  let room = await bot.setAdressByUrl("");
-
+  const room = await bot.setAdressByUrl("");
+  // const room = await bot.setAdressByName("");
   bot.connect(room);
 });
 
