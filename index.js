@@ -3,13 +3,14 @@ const BonkClient = require("./module/Client.js");
 const client = new BonkClient();
 
 client.on("ready", async (bot) => {
-  const room = await bot.setAdressByUrl("");
+  const room = await bot.setAdressByUrl("https://bonk.io/541271");
   // const room = await bot.setAdressByName("");
   bot.connect(room);
+  console.log(room);
 });
 
-client.on("MESSAGE", async (message) => {
-  console.log(message);
+client.on("bonk_chat_message", async (chat) => {
+  await chat.sendMessage(chat.message[chat.message.length - 1]);
 });
 
 //LOGIN
@@ -182,3 +183,19 @@ client.login({
     bc: 327746,
   },
 });
+
+/*
+
+42[44,{"out":true}] //tab ou nao
+42[6,{"targetTeam":5}] // de 0 a 5 
+0 - spec
+1 - join normal
+2 a 5 time normal
+41 - para sair
+42[26,{"targetID":1,"targetTeam":0}] // MOVE A PESSOA DE TIME
+42[16,{"ready":true}] // tem ready true e false
+42[32,{"t":true}] // TIMES ON E OFF
+42[34,{"id":6}] // DAR HOST PARA A PESSOA: ID DA PESSOA
+42[36,{"num":1}] // finge que começa num de 1 a 3
+42[7,{"teamLock":true}] //Bloqueia os times
+*/
