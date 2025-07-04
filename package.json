@@ -7,7 +7,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "author": "dcx!",
+  "author": "dcx! & error_504",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.10.0",
