@@ -1,5 +1,6 @@
 const tools = require("./services/tools.js");
 const ws = require("./services/WSbonk.js");
+const EventEmitter = require("events");
 
 function validateToken(fn) {
   return async function (...args) {
@@ -11,7 +12,7 @@ function validateToken(fn) {
   };
 }
 
-class bonkClient extends ws {
+class bonkClient extends EventEmitter {
   constructor() {
     super();
     this.TOOL = tools;
@@ -63,11 +64,14 @@ class bonkClient extends ws {
         throw new Error("Nenhuma sala inserida!");
       }
       const count = this.count++;
-      const wsInstance = new this.WS(
-        count,
-        room.server,
-        room.payload,
-      );
+      const wsInstance = new this.WS(count, room.server, room.payload);
+
+      //event
+
+      wsInstance.emitter.on("bonk_chat_message", (msg) => {
+        this.emit("bonk_chat_message", msg);
+      });
+
       this.servers.push({ id: count, s: wsInstance });
       await wsInstance.connect();
 
@@ -86,7 +90,7 @@ class bonkClient extends ws {
 
       if (!code) {
         throw new Error(
-          `[BonkClient] Formato de URL inválido: "${roomLink}". Use "bonk.io/CODE" ou apenas "CODE"`,
+          `[BonkClient] Formato de URL inválido: "${roomLink}". Use "bonk.io/CODE" ou apenas "CODE"`
         );
       }
 
@@ -94,7 +98,7 @@ class bonkClient extends ws {
       if (!server || server.error || server.r == "failed") {
         throw new Error(
           server?.error ||
-            `[BonkClient] Sala ${code} não encontrada ou inacessível`,
+            `[BonkClient] Sala ${code} não encontrada ou inacessível`
         );
       }
       console.log(`[BonkClient] Sala encontrada: ${code}`);
@@ -113,34 +117,34 @@ class bonkClient extends ws {
       const rooms = await this.TOOL.getAllRooms(this.client.token);
       if (!rooms || rooms.error) {
         throw new Error(
-          rooms?.error || "[BonkClient] Erro ao buscar lista de salas",
+          rooms?.error || "[BonkClient] Erro ao buscar lista de salas"
         );
       }
 
       const matches = rooms.rooms?.filter(
-        (r) => r.roomname?.toLowerCase() === roomName.toLowerCase(),
+        (r) => r.roomname?.toLowerCase() === roomName.toLowerCase()
       );
       if (!matches || matches.length === 0) {
         throw new Error(
-          `[BonkClient] Nenhuma sala encontrada com o nome "${roomName}"`,
+          `[BonkClient] Nenhuma sala encontrada com o nome "${roomName}"`
         );
       }
 
       const selectedRoom = matches[0];
       console.log(
-        `[BonkClient]  Sala encontrada - ID: ${selectedRoom.id}, Nome: "${selectedRoom.roomname}"`,
+        `[BonkClient]  Sala encontrada - ID: ${selectedRoom.id}, Nome: "${selectedRoom.roomname}"`
       );
 
       const server = await this.TOOL.getRoomInfo(selectedRoom.id);
       if (!server || server.error) {
         throw new Error(
-          server?.error || "[BonkClient] Erro ao obter informações da sala",
+          server?.error || "[BonkClient] Erro ao obter informações da sala"
         );
       }
 
       const payload = this._createServerPayload(server.address, server.server);
       console.log(
-        `[BonkClient] Sala encontrada: "${roomName}" (ID: ${selectedRoom.id})`,
+        `[BonkClient] Sala encontrada: "${roomName}" (ID: ${selectedRoom.id})`
       );
       return payload;
     } catch (e) {
@@ -151,10 +155,10 @@ class bonkClient extends ws {
 }
 
 bonkClient.prototype.setAdressByUrl = validateToken(
-  bonkClient.prototype.setAdressByUrl,
+  bonkClient.prototype.setAdressByUrl
 );
 bonkClient.prototype.setAdressByName = validateToken(
-  bonkClient.prototype.setAdressByName,
+  bonkClient.prototype.setAdressByName
 );
 bonkClient.prototype.connect = validateToken(bonkClient.prototype.connect);
 module.exports = bonkClient;
