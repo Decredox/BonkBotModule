@@ -1,5 +1,7 @@
-class Commands {
+const EventEmitter = require("events");
+class Commands extends EventEmitter {
   constructor({ wsId, ws, send, disconnect, emitter }) {
+    super();
     this.wsId = wsId;
     this.ws = ws;
     this.send = send;
@@ -18,7 +20,9 @@ class Commands {
       const room = data[1] + data[2];
       const paddedRoom = room.padStart(6, "0");
       this.state.roomId = paddedRoom;
-      this.emitter?.emit("roomIdSet", paddedRoom);
+
+      this.emitter?.emit("ROOM_LINK", paddedRoom);
+      console.log("ROOM: ", paddedRoom);
     });
 
     this.register("42[3", (data) => {
@@ -27,24 +31,31 @@ class Commands {
         username: user.userName.toLowerCase(),
         avatar: user.avatar,
       }));
-      this.emitter?.emit("usersUpdated", this.state.users);
+      // console.log("USUARIOS: ", this.state.users)
+      //       this.emitter?.emit("usersUpdated", this.state.users);
     });
 
     this.register("42[4", (data) => {
       const username = data[3].toLowerCase();
-      const avatar = data.at(-1);
+      const avatar = data[data.length - 1];
       const index = this.state.users.findIndex((u) => u.username === username);
       if (index !== -1) {
         this.state.users[index].avatar = avatar;
       } else {
         this.state.users.push({ username, avatar });
       }
-      this.emitter?.emit("avatarUpdated", { username, avatar });
+      // console.log("USUARIOS: ", this.state.users)
+      // this.emitter?.emit("avatarUpdated", { username, avatar });
     });
 
     this.register("42[20", (data) => {
-      if (data[1] !== this.state.myId) return;
-      this.emitter.emit("MESSAGE", data);
+      if (data[1] == this.state.myId) return;
+      this.emitter?.emit("bonk_chat_message", {
+        message: data,
+        sendMessage: (text) => {
+          this.send(`42[10,{"message":"${text}"}]`);
+        },
+      });
     });
   }
 
