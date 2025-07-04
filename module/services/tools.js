@@ -4,25 +4,18 @@ class TOOLS {
   constructor() {
     this.api = axios.create({
       baseURL: "https://bonk2.io/scripts/",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
   }
 
-  p(data) {
-    return new URLSearchParams(data).toString();
-  }
+  p(data) { return new URLSearchParams(data).toString(); }
 
   async post(endpoint, data) {
     try {
       const res = await this.api.post(endpoint, this.p(data));
       return res.data;
     } catch (error) {
-      console.error(
-        `Erro em POST ${endpoint}:`,
-        error?.response?.data || error.message
-      );
+      console.error(`Erro em POST ${endpoint}:`, error?.response?.data || error.message);
       throw error;
     }
   }
@@ -32,21 +25,14 @@ class TOOLS {
       const res = await this.api.get(endpoint);
       return res.data;
     } catch (error) {
-      console.error(
-        `Erro em GET ${endpoint}:`,
-        error?.response?.data || error.message
-      );
+      console.error(`Erro em GET ${endpoint}:`, error?.response?.data || error.message);
       throw error;
     }
   }
 
   // Auth
   login(username, password) {
-    return this.post("login_legacy.php", {
-      username,
-      password,
-      remember: true,
-    });
+    return this.post("login_legacy.php", { username, password, remember: true });
   }
 
   autoLogin(rememberToken) {
@@ -58,11 +44,7 @@ class TOOLS {
   }
 
   register(username, password) {
-    return this.post("register_legacy.php", {
-      username,
-      password,
-      remember: true,
-    });
+    return this.post("register_legacy.php", { username, password, remember: true });
   }
 
   // Rooms
@@ -84,38 +66,21 @@ class TOOLS {
   }
 
   addFriend(token, friendName) {
-    return this.post("friends.php", {
-      token,
-      task: "send",
-      tatheirnamesk: friendName,
-    });
+    return this.post("friends.php", { token, task: "send", tatheirnamesk: friendName });
   }
 
   // Avatar
   saveSkin(token, slot, skinData) {
-    return this.post("avatar_update.php", {
-      token,
-      task: "updateavatar",
-      newavatarslot: slot,
-      newavatar: skinData,
-    });
+    return this.post("avatar_update.php", { token, task: "updateavatar", newavatarslot: slot, newavatar: skinData });
   }
 
   updateSkinSlot(token, slot) {
-    return this.post("avatar_update.php", {
-      token,
-      task: "updateslot",
-      newactive: slot,
-    });
+    return this.post("avatar_update.php", { token, task: "updateslot", newactive: slot });
   }
 
   // Replays
   getReplays(offset = 0, startingFrom = "") {
-    return this.post("replay_get.php", {
-      version: "49",
-      offset,
-      startingFrom,
-    });
+    return this.post("replay_get.php", { version: "49", offset, startingFrom });
   }
 
   // Player count
@@ -125,8 +90,7 @@ class TOOLS {
 
   // Skin encoder (static utility)
   static encodeSkin(d) {
-    const h = (x) =>
-      Uint8Array.from(x.match(/../g).map((b) => parseInt(b, 16)));
+    const h = (x) => Uint8Array.from(x.match(/../g).map((b) => parseInt(b, 16)));
     const a = (b1, b2) => Uint8Array.from([...b1, ...b2]);
     const n = (x) => Uint8Array.of(x & 255);
     const f = (x) => {
@@ -160,9 +124,7 @@ class TOOLS {
   static decodeSkin(s) {
     const b = Uint8Array.from(Buffer.from(s, "base64"));
     const v = new DataView(b.buffer);
-    let o = 9,
-      r = [],
-      c = (x) => (x[0] << 16) | (x[1] << 8) | x[2];
+    let o = 9, r = [], c = (x) => (x[0] << 16) | (x[1] << 8) | x[2];
     o += 1 + 11; // skip count + header
     let n = (b[9] - 1) / 2;
     for (let i = 0; i < n; i++) {
@@ -185,8 +147,6 @@ class TOOLS {
     let baseColor = c(b.slice(o + 1, o + 4));
     return { layers: r, baseColor };
   }
-
-  //others
 
   generatePeerId() {
     return Math.random().toString(36).substr(2, 10) + "v00000";
