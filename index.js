@@ -1,22 +1,60 @@
 const BonkClient = require("./module/Client.js");
-
 const client = new BonkClient();
 
-client.on("ready", async (bot) => {
-  const room = await bot.setAdressByUrl("https://bonk.io/384632");
-  bot.connect(room);
-  console.log(room);
+// Configuração de tratamento global de erros
+process.on('uncaughtException', (err) => {
+  console.error('[ERRO GLOBAL]', err.message, err.stack);
 });
 
-client.on("bonk_chat_message", async (chat) => {
-  await chat.sendMessage(chat.message[chat.message.length - 1]);
+process.on('unhandledRejection', (err) => {
+  console.error('[PROMISE NÃO TRATADA]', err.message, err.stack);
 });
 
-client.login({
-  username: "RoomManager",
-  password: "mR#84vX2!qLp@Zu9Wd",
-  avatar: {
-    layers: [
+// Eventos do cliente
+client.on('ready', async (bot) => {
+  try {
+    console.log('[CLIENTE] Bot pronto, conectando à sala...');
+    
+    const room = await bot.setAdressByUrl("https://bonk.io/263882")
+      .catch(err => { throw new Error(`Falha ao obter sala: ${err.message}`) });
+    
+    if (!room) throw new Error('Dados da sala inválidos');
+    
+    await bot.connect(room);
+    console.log('[CLIENTE] Conectado à sala com sucesso');
+    
+  } catch (err) {
+    console.error('[ERRO] Falha na conexão:', err.message);
+    process.exit(1);
+  }
+});
+
+client.on('bonk_chat_message', async (chat) => {
+  try {
+    if (!chat.message || chat.message.length === 0) return;
+    
+    const lastMessage = chat.message[chat.message.length - 1];
+    if (typeof lastMessage !== 'string') return;
+    
+    await chat.sendMessage(lastMessage);
+    console.log('[CHAT] Mensagem enviada:', lastMessage);
+    
+  } catch (err) {
+    console.error('[ERRO] No envio de mensagem:', err.message);
+  }
+});
+
+client.on('error', (err) => {
+  console.error('[ERRO DO CLIENTE]', err.message);
+});
+
+// Iniciar o cliente
+try {
+  client.login({
+    username: "RoomManager",
+    password: "mR#84vX2!qLp@Zu9Wd",
+    avatar: {
+      layers: [
       { id: 13, scale: 0.06, angle: 0, x: 5.14, y: 4.86, flipX: false, flipY: false, color: 13558016 },
       { id: 13, scale: 0.06, angle: 0, x: 0.29, y: 4.57, flipX: false, flipY: false, color: 13558016 },
       { id: 67, scale: 0.49, angle: -7, x: 0.86, y: 35.14, flipX: true, flipY: false, color: 16712725 },
@@ -33,7 +71,15 @@ client.login({
       { id: 28, scale: 0.2, angle: 0, x: 0, y: -4, flipX: false, flipY: false, color: 327746 },
       { id: 80, scale: 0.069, angle: 0, x: 0, y: -7.5, flipX: false, flipY: false, color: 16765704 },
       { id: 80, scale: 0.38, angle: 0, x: 0, y: 8.11, flipX: false, flipY: false, color: 16383966 }
-    ],
-    bc: 327746
-  }
-});
+      ],
+      bc: 327746
+    }
+  }).catch(err => {
+    console.error('[ERRO DE LOGIN]', err.message);
+    process.exit(1);
+  });
+
+} catch (err) {
+  console.error('[ERRO INESPERADO]', err.message);
+  process.exit(1);
+}
