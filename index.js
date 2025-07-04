@@ -3,8 +3,7 @@ const BonkClient = require("./module/Client.js");
 const client = new BonkClient();
 
 client.on("ready", async (bot) => {
-  const room = await bot.setAdressByUrl("https://bonk.io/541271");
-  // const room = await bot.setAdressByName("");
+  const room = await bot.setAdressByUrl("https://bonk.io/384632");
   bot.connect(room);
   console.log(room);
 });
@@ -13,189 +12,28 @@ client.on("bonk_chat_message", async (chat) => {
   await chat.sendMessage(chat.message[chat.message.length - 1]);
 });
 
-//LOGIN
 client.login({
   username: "RoomManager",
   password: "mR#84vX2!qLp@Zu9Wd",
   avatar: {
     layers: [
-      {
-        id: 13,
-        scale: 0.05999999865889549,
-        angle: 0,
-        x: 5.142857074737549,
-        y: 4.857142925262451,
-        flipX: false,
-        flipY: false,
-        color: 13558016,
-      },
-      {
-        id: 13,
-        scale: 0.05999999865889549,
-        angle: 0,
-        x: 0.2857142984867096,
-        y: 4.5714287757873535,
-        flipX: false,
-        flipY: false,
-        color: 13558016,
-      },
-      {
-        id: 67,
-        scale: 0.49000000953674316,
-        angle: -7,
-        x: 0.8569999933242798,
-        y: 35.143001556396484,
-        flipX: true,
-        flipY: false,
-        color: 16712725,
-      },
-      {
-        id: 67,
-        scale: 0.49000000953674316,
-        angle: 7,
-        x: 0.8571428656578064,
-        y: 34.14285659790039,
-        flipX: false,
-        flipY: false,
-        color: 16712724,
-      },
-      {
-        id: 13,
-        scale: 0.05999999865889549,
-        angle: 0,
-        x: -5.714285850524902,
-        y: 5.857142925262451,
-        flipX: false,
-        flipY: false,
-        color: 13689088,
-      },
-      {
-        id: 13,
-        scale: 0.07000000029802322,
-        angle: 0,
-        x: 2,
-        y: -0.1428571492433548,
-        flipX: false,
-        flipY: false,
-        color: 1761792,
-      },
-      {
-        id: 13,
-        scale: 0.07000000029802322,
-        angle: 0,
-        x: -2.5714285373687744,
-        y: -1.8571428060531616,
-        flipX: false,
-        flipY: false,
-        color: 1761792,
-      },
-      {
-        id: 13,
-        scale: 0.0949999988079071,
-        angle: 0,
-        x: 0,
-        y: -6.857142925262451,
-        flipX: false,
-        flipY: false,
-        color: 235263,
-      },
-      {
-        id: 28,
-        scale: 0.20000000298023224,
-        angle: 0,
-        x: 0,
-        y: 8.600000381469727,
-        flipX: true,
-        flipY: false,
-        color: 327746,
-      },
-      {
-        id: 28,
-        scale: 0.20000000298023224,
-        angle: 0,
-        x: -6.300000190734863,
-        y: 8.600000381469727,
-        flipX: false,
-        flipY: false,
-        color: 327746,
-      },
-      {
-        id: 28,
-        scale: 0.20000000298023224,
-        angle: 0,
-        x: 2.700000047683716,
-        y: 1.7000000476837158,
-        flipX: false,
-        flipY: false,
-        color: 327746,
-      },
-      {
-        id: 28,
-        scale: 0.20000000298023224,
-        angle: 0,
-        x: 6.199999809265137,
-        y: 8.600000381469727,
-        flipX: false,
-        flipY: false,
-        color: 327746,
-      },
-      {
-        id: 28,
-        scale: 0.20000000298023224,
-        angle: 0,
-        x: -2.5999999046325684,
-        y: 1.7000000476837158,
-        flipX: false,
-        flipY: false,
-        color: 327746,
-      },
-      {
-        id: 28,
-        scale: 0.20000000298023224,
-        angle: 0,
-        x: 0,
-        y: -4,
-        flipX: false,
-        flipY: false,
-        color: 327746,
-      },
-      {
-        id: 80,
-        scale: 0.0689999982714653,
-        angle: 0,
-        x: 0,
-        y: -7.5,
-        flipX: false,
-        flipY: false,
-        color: 16765704,
-      },
-      {
-        id: 80,
-        scale: 0.3799999952316284,
-        angle: 0,
-        x: 0,
-        y: 8.114285469055176,
-        flipX: false,
-        flipY: false,
-        color: 16383966,
-      },
+      { id: 13, scale: 0.06, angle: 0, x: 5.14, y: 4.86, flipX: false, flipY: false, color: 13558016 },
+      { id: 13, scale: 0.06, angle: 0, x: 0.29, y: 4.57, flipX: false, flipY: false, color: 13558016 },
+      { id: 67, scale: 0.49, angle: -7, x: 0.86, y: 35.14, flipX: true, flipY: false, color: 16712725 },
+      { id: 67, scale: 0.49, angle: 7, x: 0.86, y: 34.14, flipX: false, flipY: false, color: 16712724 },
+      { id: 13, scale: 0.06, angle: 0, x: -5.71, y: 5.86, flipX: false, flipY: false, color: 13689088 },
+      { id: 13, scale: 0.07, angle: 0, x: 2, y: -0.14, flipX: false, flipY: false, color: 1761792 },
+      { id: 13, scale: 0.07, angle: 0, x: -2.57, y: -1.86, flipX: false, flipY: false, color: 1761792 },
+      { id: 13, scale: 0.095, angle: 0, x: 0, y: -6.86, flipX: false, flipY: false, color: 235263 },
+      { id: 28, scale: 0.2, angle: 0, x: 0, y: 8.6, flipX: true, flipY: false, color: 327746 },
+      { id: 28, scale: 0.2, angle: 0, x: -6.3, y: 8.6, flipX: false, flipY: false, color: 327746 },
+      { id: 28, scale: 0.2, angle: 0, x: 2.7, y: 1.7, flipX: false, flipY: false, color: 327746 },
+      { id: 28, scale: 0.2, angle: 0, x: 6.2, y: 8.6, flipX: false, flipY: false, color: 327746 },
+      { id: 28, scale: 0.2, angle: 0, x: -2.6, y: 1.7, flipX: false, flipY: false, color: 327746 },
+      { id: 28, scale: 0.2, angle: 0, x: 0, y: -4, flipX: false, flipY: false, color: 327746 },
+      { id: 80, scale: 0.069, angle: 0, x: 0, y: -7.5, flipX: false, flipY: false, color: 16765704 },
+      { id: 80, scale: 0.38, angle: 0, x: 0, y: 8.11, flipX: false, flipY: false, color: 16383966 }
     ],
-    bc: 327746,
-  },
+    bc: 327746
+  }
 });
-
-/*
-
-42[44,{"out":true}] //tab ou nao
-42[6,{"targetTeam":5}] // de 0 a 5 
-0 - spec
-1 - join normal
-2 a 5 time normal
-41 - para sair
-42[26,{"targetID":1,"targetTeam":0}] // MOVE A PESSOA DE TIME
-42[16,{"ready":true}] // tem ready true e false
-42[32,{"t":true}] // TIMES ON E OFF
-42[34,{"id":6}] // DAR HOST PARA A PESSOA: ID DA PESSOA
-42[36,{"num":1}] // finge que começa num de 1 a 3
-42[7,{"teamLock":true}] //Bloqueia os times
-*/
