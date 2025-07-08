@@ -11,45 +11,48 @@ process.on('unhandledRejection', (err) => {
 });
 
 // Eventos do cliente
-client.on('ready', async (bot) => {
-  try {
-    console.log('[CLIENTE] Bot pronto, conectando à sala...');
-    
-    const room = await bot.setAdressByUrl("https://bonk.io/263882")
-      .catch(err => { throw new Error(`Falha ao obter sala: ${err.message}`) });
-    
-    if (!room) throw new Error('Dados da sala inválidos');
-    
+/*
+        setAdressByUrl -  sets adress of room by url
+        setAdressByName -  sets adress of room by url
+        connect - conect to server
+        */
+client.on('ready', async (bot) => { 
+    const room = await bot.setAdressByUrl("https://bonk.io/756626")
     await bot.connect(room);
-    console.log('[CLIENTE] Conectado à sala com sucesso');
-    
-  } catch (err) {
-    console.error('[ERRO] Falha na conexão:', err.message);
-    process.exit(1);
-  }
 });
+
+
+
 
 client.on('bonk_chat_message', async (chat) => {
-  try {
-    if (!chat.message || chat.message.length === 0) return;
-    
-    const lastMessage = chat.message[chat.message.length - 1];
-    if (typeof lastMessage !== 'string') return;
-    
-    await chat.sendMessage(lastMessage);
-    console.log('[CHAT] Mensagem enviada:', lastMessage);
-    
-  } catch (err) {
-    console.error('[ERRO] No envio de mensagem:', err.message);
-  }
+  console.log(chat.author,chat.message);
 });
 
-client.on('error', (err) => {
-  console.error('[ERRO DO CLIENTE]', err.message);
+/*
+      userJoined - return the username
+        sendMessage: method of send message
+        getUserHost: method for get a userhost
+        getUsers: method for get a players
+*/
+client.on('bonk_player_join', async (ctx) => {
+  ctx.sendMessage(ctx.userJoined.userName + " Entrou no servidor! [LEVEL: "+ctx.userJoined.level+"]")
 });
 
-// Iniciar o cliente
-try {
+
+/*
+        userLefted - return the username
+        timeInServer - return time on server
+        sendMessage - method of send message
+        getUserHost - method for get a userhost
+        getUsers - method for get a players
+        */
+client.on('bonk_player_left', async (ctx) => {
+  ctx.sendMessage(ctx.userJoined.userName + " SAIU do servidor! [TIMESTAMP: "+ctx.timeInServer+"]")
+     
+});
+
+
+
   client.login({
     username: "RoomManager",
     password: "mR#84vX2!qLp@Zu9Wd",
@@ -74,12 +77,4 @@ try {
       ],
       bc: 327746
     }
-  }).catch(err => {
-    console.error('[ERRO DE LOGIN]', err.message);
-    process.exit(1);
-  });
-
-} catch (err) {
-  console.error('[ERRO INESPERADO]', err.message);
-  process.exit(1);
-}
+  })

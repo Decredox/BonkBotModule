@@ -1,19 +1,23 @@
 {
-  "name": "bonkBot",
-  "version": "0.1",
-  "description": "Client de integraçao",
+  "name": "bonkbotmodule",
+  "version": "1.0.0",
+  "description": "Este projeto é um bot para interagir com salas do Bonk.io via WebSocket, utilizando `socket.io-client` compatível com EIO v3 (engine.io 3.x).",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "dcx! & error_504",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Decredox/BonkBotModule.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Decredox/BonkBotModule/issues"
+  },
+  "homepage": "https://github.com/Decredox/BonkBotModule#readme",
   "dependencies": {
     "axios": "^1.10.0",
     "ws": "^8.18.3"
-  }
-  "devDependencies": {
-    "nodemon": "^3.0.0"
   }
 }

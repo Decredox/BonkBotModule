@@ -1,75 +1,87 @@
 const WebSocket = require("ws");
-const EventEmitter = require("events");
-const Commands = require("./Commands.js");
-
+// const EventEmitter = require("events");
+const receives = require("./events/receives.js");
 class WEBSOCKET {
-  constructor(wsID, server, roomData) {
-    this.wsID = wsID;
-    this.server = server;
+  constructor(wsID, server, roomData, logger, emitter) {
+    this.server = {wsID, server};
     this.roomData = roomData;
     this.ws = null;
-    this.commands = null;
+    this.receives = null;
     this.ping = null;
-    this.emitter = new EventEmitter();
+    this.logger = logger;
+    this.emitter = emitter;
   }
 
   async connect() {
     return new Promise((resolve, reject) => {
-      this.ws = new WebSocket(`wss://${this.server}.bonk.io/socket.io/?EIO=3&transport=websocket`, {
-        headers: {
-          Origin: "https://bonk.io",
-          Referer: "https://bonk.io/",
-          "User-Agent": "Mozilla/5.0",
-        },
-      });
+      this.ws = new WebSocket(
+        `wss://${this.server.server}.bonk.io/socket.io/?EIO=3&transport=websocket`,
+        {
+          headers: {
+            Origin: "https://bonk.io",
+            Referer: "https://bonk.io/",
+            "User-Agent": "Mozilla/5.0",
+          },
+        }
+      );
 
       this.ws.on("open", () => {
-        this.send = (msg) => this.ws.send(msg);
-        this.disconnect = () => this.ws.close();
-        this.commands = new Commands({
-          wsId: this.wsID,
+        this.send(`42[13, ${JSON.stringify(this.roomData)}]`);
+        this.receives = new receives({
+          server: this.server,
           ws: this.ws,
           send: this.send.bind(this),
-          disconnect: this.disconnect,
+          disconnect: this.disconnect.bind(this),
+          logger: this.logger,
           emitter: this.emitter,
+          
         });
-        this.send(`42[13, ${JSON.stringify(this.roomData)}]`);
-        this.send(`42[44,{"out":true}]`);
+
         this.ping = setInterval(() => this.send(40), 10000);
-        console.log("[BonkWebSocket] Conectado com sucesso!");
+        this.logger.log("INFO", "[BonkWebSocket] Conectado com sucesso!");
+        resolve();
       });
 
       this.ws.on("message", (data) => {
         const messageStr = data.toString().trim();
-        console.log("[BonkWebSocket] Mensagem recebida: ", messageStr);
         if (!/^\d+\[(\d+),(.*)\]$/s.test(messageStr)) return;
-        let payload = JSON.parse(messageStr.replace(/^[^\[]*\[/, "["));
-        const matchCMD = messageStr.match(/^(\d+\[\d+)/);
-        const command = matchCMD ? matchCMD[1] : null;
-        console.log("COMANDOO: ", command);
-        if (command) this.commands.execute(command, payload);
-        else console.warn("Comando desconhecido:", messageStr);
+
+        try {
+          const payload = JSON.parse(messageStr.replace(/^[^\[]*\[/, "["));
+          const matchCMD = messageStr.match(/^(\d+\[\d+)/);
+          const command = matchCMD ? matchCMD[1] : null;
+          console.log(messageStr);
+          if (command) this.receives.execute(command, payload);
+          else this.logger.log("WARN", `Handler desconhecido: ${messageStr}`);
+        } catch (e) {
+          this.logger.log("ERROR", `Erro ao processar mensagem: ${e.message}`);
+        }
       });
 
       this.ws.on("close", () => {
         if (this.ping) clearInterval(this.ping);
-        console.log("[BonkWebSocket] Conexão WebSocket fechada.");
+        this.logger.log("WARN", "Conexão WebSocket fechada.");
       });
 
       this.ws.on("error", (err) => {
-        console.error("[BonkWebSocket] Erro WebSocket:", err);
+        this.logger.log("ERROR", `Erro WebSocket: ${err}`);
         reject(err);
       });
     });
   }
 
   send(message) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send(message);
-    else console.warn("[BonkWebSocket] WebSocket não está conectado.");
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(message);
+    } else {
+      this.logger.log("WARN", "WebSocket não está conectado.");
+    }
   }
 
   disconnect() {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.close();
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.close();
+    }
   }
 }
 
