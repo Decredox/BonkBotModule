@@ -18,10 +18,10 @@ class SENDERS {
   }
 
   //ENCODEMAP
-  decodeMap(mapBase64){
-    const decodedMap = MapCodec.decodeMap(mapBase64);
-    console.log(decodedMap);
-  }
+  // decodeMap(mapBase64){
+  //   const decodedMap = MapCodec.decodeMap(mapBase64);
+  //   console.log(decodedMap);
+  // }
   
   //Manda o mapa para o jogador requisitor.
 sendactuallyMapToClient(data) {

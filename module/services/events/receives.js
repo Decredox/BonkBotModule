@@ -91,19 +91,17 @@ class Commands {
       );
     });
     //quando alguem sai da sala
-    
-    
     this.register("42[5", (data) => {
-      const user = this.roomSettings.users[data[1]];
         this.emitter.emit("C_PLAYER_LEFT", {
-        userLefted: user,
-        timeInServer: data[2] - Date.now(),
+        userLefted: this.roomSettings.users[data[1]] ,
+        timeInServer: data[2],
         sendMessage: (text) => this.methods.sendMessage(text),
         getUserHost: this.methods.getUserHost.bind(this.methods),
         getUsers: this.methods.getUsers.bind(this.methods),
       });
-    delete this.roomSettings.users[data[1]]
-    
+console.log("do servidor: ", data[2]);
+    console.log("DATENOW: ", Date.now());
+    delete this.roomSettings.users[data[1]]  
 })
 
     //pegar o mapa atual - tem que pegar o balance. é o data1.bal
@@ -138,6 +136,7 @@ class Commands {
         getUserHost: this.methods.getUserHost.bind(this.methods),
         getUsers: this.methods.getUsers.bind(this.methods),
       });
+      
       this.logger?.log?.("INFO", `JOGADOR ${data[3]} ENTROU NA SALA`);
     });
 
@@ -431,6 +430,7 @@ ${this.roomSettings.roomLocked ? '🔒' : '🔓'} Sala trancada`);
     );
   }
 */
+ 
 
   register(command, handler) {
     this.handlers.set(command, handler);

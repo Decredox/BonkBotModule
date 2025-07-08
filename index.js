@@ -17,7 +17,7 @@ process.on('unhandledRejection', (err) => {
         connect - conect to server
         */
 client.on('ready', async (bot) => { 
-    const room = await bot.setAdressByUrl("https://bonk.io/756626")
+    const room = await bot.setAdressByUrl("https://bonk.io/361493")
     await bot.connect(room);
 });
 
@@ -47,7 +47,7 @@ client.on('bonk_player_join', async (ctx) => {
         getUsers - method for get a players
         */
 client.on('bonk_player_left', async (ctx) => {
-  ctx.sendMessage(ctx.userJoined.userName + " SAIU do servidor! [TIMESTAMP: "+ctx.timeInServer+"]")
+  ctx.sendMessage(ctx.userLefted.userName + " SAIU do servidor! [TEMPO NO SERVIDOR: "+ctx.timeInServer+" segundos]")
      
 });
 
