@@ -1,11 +1,4 @@
-//42[36,8,-100] balance, de -100 até 100
-// 42[26,"b","b"] -> classic;
-// 42[26,"b","ar"] -> arrow;
-// 42[26,"b","ard"] -> death arow
-// 42[26,"b","sp"] -> grapple
-// 42[26,"b","v"] -> VTOL
-// 42[26,"f","f"] -> futebol
-// Arrumar o 42[29 para pegar o balance atual de todos os jogadores
+
 const senders = require("./senders.js");
 class Receives {
   constructor({ server, ws, send, disconnect, logger, emitter }) {
@@ -64,21 +57,23 @@ this.modes = {
 
 
     //quando muda o modo do jogo
-    this.register("42[26,", (data) => {
-      this.roomSettings.mode = this.modes[data[2]].name;
+    this.register("42[26", (data) => {
+      this.roomSettings.mode = this.modes[data[2]];
     })
 
 
-    //quando host altera balance do usuario!!
-    this.register("42[36", (data) => {
-      this.roomSettings.users[data[1]].bal = data[2];
-    });
 
 
-   //ao entrar no game tem o mapa e o balance
-    this.register("42[29", (data) => {
-      console.log("42[29", data)
-    })
+
+// ao entrar no game tem o mapa
+    this.register("42[21", (data) => {
+      this.roomSettings.map = data[1];
+     });
+
+
+
+
+    
 
     //time locked ou n
     this.register("42[19", (data) => {
@@ -118,19 +113,16 @@ this.modes = {
     });
 
     //quando entra na sala
-    this.register("42[3", (data) => {
+     this.register("42[3", (data) => {
       this.state.botId = data[1];
       this.state.hostId = data[2];
-this.roomSettings.users = Object.fromEntries(
-  Object.entries(data[3])
-    .filter(([key, value]) => value !== null && key !== this.state.botId)
-    .map(([key, value]) => {
-      value.bal = 0; 
-        return [key, value];
-    })
-);
-
+      this.roomSettings.users = Object.fromEntries(
+        Object.entries(data[3]).filter(
+          ([key, value]) => value !== null && key !== this.state.botId
+        )
+      );
     });
+
 
         //quando alguem é kickado ou banido / [.., id, true para kick, false para ban]
     this.register("42[24", (data) => {
@@ -156,11 +148,7 @@ this.roomSettings.users = Object.fromEntries(
     delete this.roomSettings.users[data[1]]  
 })
 
-    //pegar o mapa atual - tem que pegar o balance. é o data1.bal
-    this.register("42[21", (data) => {
-      this.roomSettings.map = data[1];
-    });
-
+ 
     //quando usuario entra na sala
     this.register("42[4", (data) => {
       this.methods.sendactuallyMapToClient(data);
@@ -173,7 +161,6 @@ this.roomSettings.users = Object.fromEntries(
         ready: false,
         tabbed: false,
         avatar: data[7],
-        bal:0
       };
       this.roomSettings.users[data[1]] = user;
       //       if (

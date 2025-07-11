@@ -17,7 +17,7 @@ process.on('unhandledRejection', (err) => {
         connect - conect to server
         */
 client.on('ready', async (bot) => { 
-    const room = await bot.setAdressByUrl("https://bonk.io/775811")
+    const room = await bot.setAdressByUrl("165542")
     await bot.connect(room);
 });
 
