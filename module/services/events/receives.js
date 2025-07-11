@@ -1,13 +1,28 @@
 //42[36,8,-100] balance, de -100 até 100
+// 42[26,"b","b"] -> classic;
+// 42[26,"b","ar"] -> arrow;
+// 42[26,"b","ard"] -> death arow
+// 42[26,"b","sp"] -> grapple
+// 42[26,"b","v"] -> VTOL
+// 42[26,"f","f"] -> futebol
+// Arrumar o 42[29 para pegar o balance atual de todos os jogadores
 const senders = require("./senders.js");
-class Commands {
+class Receives {
   constructor({ server, ws, send, disconnect, logger, emitter }) {
-    // super();
+    
     this.server = server;
     this.ws = ws;
     this.emitter = emitter;
     this.logger = logger;
 
+this.modes = {
+   "b":{name: "Classic", info: ["b", "b"]},
+   "ar":{name: "Arrows", info: ["b", "ar"]},
+   "ard":{name: "Death Arrows", info: ["b", "ard"]},
+   "sp":{name: "Grapple", info: ["b", "sp"]},
+   "v":{name: "VTOL", info: ["b", "v"]},
+   "f":{name: "Futebol", info: ["f", "f"]},
+}
     this.state = {
       botId: undefined,
       hostId: undefined,
@@ -17,9 +32,11 @@ class Commands {
     this.roomSettings = {
       rounds: 3,
       teamsLocked: undefined,
-      roomLocked: undefined,
+      // roomLocked: undefined,
       users: {},
       map: undefined,
+      mode: undefined,
+    
     };
     this.methods = new senders(
       send,
@@ -38,19 +55,37 @@ class Commands {
     //   currentGame: null,
     //   participants: new Set(),
     //   scores: {},
-    //   cooldowns: {}
+//   cooldowns: {}
     // };
 
     // this.initDefaultHandlers();
     // this.initAdminCommands();
     // this.initMinigameCommands();
 
-    //Quando jogador fica alterna de tab ou n
-  
-    this.register("42[29", (data) => {
-      this.methods.decodeMap(data[1]);
+
+    //quando muda o modo do jogo
+    this.register("42[26,", (data) => {
+      this.roomSettings.mode = this.modes[data[2]].name;
     })
 
+
+    //quando host altera balance do usuario!!
+    this.register("42[36", (data) => {
+      this.roomSettings.users[data[1]].bal = data[2];
+    });
+
+
+   //ao entrar no game tem o mapa e o balance
+    this.register("42[29", (data) => {
+      console.log("42[29", data)
+    })
+
+    //time locked ou n
+    this.register("42[19", (data) => {
+      this.roomSettings.teamsLocked = data[1];
+    })
+
+    //quando o jogador fica tab ou volta
     this.register("42[52", (data) => {
       this.roomSettings.users[data[1]].tabbed = data[2];
       // console.log("TABBED: ", data[1], data[2]);
@@ -68,6 +103,8 @@ class Commands {
       // console.log("MUDOU DE TIME: ", data[1], data[2]);
     });
 
+    
+
     //Atualiza host
     this.register("42[41", (data) => {
       const hosts = data[1];
@@ -84,23 +121,38 @@ class Commands {
     this.register("42[3", (data) => {
       this.state.botId = data[1];
       this.state.hostId = data[2];
-      this.roomSettings.users = Object.fromEntries(
-        Object.entries(data[3]).filter(
-          ([key, value]) => value !== null && key !== this.state.botId
-        )
-      );
+this.roomSettings.users = Object.fromEntries(
+  Object.entries(data[3])
+    .filter(([key, value]) => value !== null && key !== this.state.botId)
+    .map(([key, value]) => {
+      value.bal = 0; 
+        return [key, value];
+    })
+);
+
     });
-    //quando alguem sai da sala
-    this.register("42[5", (data) => {
-        this.emitter.emit("C_PLAYER_LEFT", {
-        userLefted: this.roomSettings.users[data[1]] ,
-        timeInServer: data[2],
+
+        //quando alguem é kickado ou banido / [.., id, true para kick, false para ban]
+    this.register("42[24", (data) => {
+        this.emitter.emit("C_PLAYER_LEFT_TYPES", {
+        type: data[2] ? 1 : 2,
+        user: this.roomSettings.users[data[1]] ,
         sendMessage: (text) => this.methods.sendMessage(text),
         getUserHost: this.methods.getUserHost.bind(this.methods),
         getUsers: this.methods.getUsers.bind(this.methods),
       });
-console.log("do servidor: ", data[2]);
-    console.log("DATENOW: ", Date.now());
+    delete this.roomSettings.users[data[1]]  
+})
+    
+    //quando alguem sai da sala
+    this.register("42[5", (data) => {
+        this.emitter.emit("C_PLAYER_LEFT_TYPES", {
+        type:0,
+        user: this.roomSettings.users[data[1]] ,
+        sendMessage: (text) => this.methods.sendMessage(text),
+        getUserHost: this.methods.getUserHost.bind(this.methods),
+        getUsers: this.methods.getUsers.bind(this.methods),
+      });
     delete this.roomSettings.users[data[1]]  
 })
 
@@ -121,6 +173,7 @@ console.log("do servidor: ", data[2]);
         ready: false,
         tabbed: false,
         avatar: data[7],
+        bal:0
       };
       this.roomSettings.users[data[1]] = user;
       //       if (
@@ -131,7 +184,7 @@ console.log("do servidor: ", data[2]);
       //       }
 
       this.emitter.emit("C_PLAYER_JOIN", {
-        userJoined: user,
+        user,
         sendMessage: (text) => this.methods.sendMessage(text),
         getUserHost: this.methods.getUserHost.bind(this.methods),
         getUsers: this.methods.getUsers.bind(this.methods),
@@ -153,7 +206,7 @@ console.log("do servidor: ", data[2]);
       //   if (commandHandler) commandHandler(data[1], args);
       // } else {
       this.emitter.emit("C_BONK_MESSAGE", {
-        author: user.userName,
+        user: user.userName,
         message: message,
     sendMessage: (text) => this.methods.sendMessage(text),
         getUserHost: this.methods.getUserHost.bind(this.methods),
@@ -442,4 +495,4 @@ ${this.roomSettings.roomLocked ? '🔒' : '🔓'} Sala trancada`);
   }
 }
 
-module.exports = Commands;
+module.exports = Receives;

@@ -17,7 +17,7 @@ process.on('unhandledRejection', (err) => {
         connect - conect to server
         */
 client.on('ready', async (bot) => { 
-    const room = await bot.setAdressByUrl("https://bonk.io/361493")
+    const room = await bot.setAdressByUrl("https://bonk.io/775811")
     await bot.connect(room);
 });
 
@@ -25,7 +25,7 @@ client.on('ready', async (bot) => {
 
 
 client.on('bonk_chat_message', async (chat) => {
-  console.log(chat.author,chat.message);
+  console.log(chat.user,chat.message);
 });
 
 /*
@@ -35,22 +35,29 @@ client.on('bonk_chat_message', async (chat) => {
         getUsers: method for get a players
 */
 client.on('bonk_player_join', async (ctx) => {
-  ctx.sendMessage(ctx.userJoined.userName + " Entrou no servidor! [LEVEL: "+ctx.userJoined.level+"]")
+  ctx.sendMessage(ctx.user.userName + " Entrou no servidor! [LEVEL: "+ctx.user.level+"]")
 });
 
 
 /*
         userLefted - return the username
-        timeInServer - return time on server
         sendMessage - method of send message
         getUserHost - method for get a userhost
         getUsers - method for get a players
         */
 client.on('bonk_player_left', async (ctx) => {
-  ctx.sendMessage(ctx.userLefted.userName + " SAIU do servidor! [TEMPO NO SERVIDOR: "+ctx.timeInServer+" segundos]")
+  ctx.sendMessage(ctx.user.userName + " SAIU do servidor!")
      
 });
 
+
+client.on('bonk_player_kicked', async (ctx) => {
+  ctx.sendMessage(ctx.user.userName + " foi KICKADO do servidor!")
+});
+
+client.on('bonk_player_banned', async (ctx) => {
+  ctx.sendMessage(ctx.user.userName + " foi BANIDO do servidor!")
+});
 
 
   client.login({

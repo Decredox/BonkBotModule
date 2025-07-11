@@ -89,6 +89,20 @@ class BonkClient extends EventEmitter {
       });
 
 
+      const exitTypes = {
+  0: (emitter, ctx) => emitter.emit("bonk_player_left", ctx),
+  1: (emitter, ctx) => emitter.emit("bonk_player_kicked", ctx),
+  2: (emitter, ctx) => emitter.emit("bonk_player_banned", ctx),
+};
+
+wsInstance.emitter.on("C_PLAYER_LEFT_TYPES", (ctx) => {
+  const fn = exitTypes[ctx.type];
+    delete ctx.type;
+    fn(wsInstance.emitter, ctx);
+});
+
+
+
       this.servers.push({ id: count, s: wsInstance });
       await wsInstance.connect();
 
