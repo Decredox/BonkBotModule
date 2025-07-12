@@ -17,7 +17,7 @@ process.on('unhandledRejection', (err) => {
         connect - conect to server
         */
 client.on('ready', async (bot) => { 
-    const room = await bot.setAdressByUrl("165542")
+    const room = await bot.setAdressByUrl("https://bonk.io/621184")
     await bot.connect(room);
 });
 
@@ -25,7 +25,7 @@ client.on('ready', async (bot) => {
 
 
 client.on('bonk_chat_message', async (chat) => {
-  console.log(chat.user,chat.message);
+  console.log(chat.user.userName,chat.message);
 });
 
 /*
@@ -60,9 +60,9 @@ client.on('bonk_player_banned', async (ctx) => {
 });
 
 
-  client.login({
+  client.auth({
     username: "RoomManager",
-    password: "mR#84vX2!qLp@Zu9Wd",
+    // password: "mR#84vX2!qLp@Zu9Wd",
     avatar: {
       layers: [
       { id: 13, scale: 0.06, angle: 0, x: 5.14, y: 4.86, flipX: false, flipY: false, color: 13558016 },

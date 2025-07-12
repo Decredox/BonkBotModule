@@ -2,9 +2,9 @@ const tools = require("./services/tools.js");
 const ws = require("./services/WSbonk.js");
 const EventEmitter = require("events");
 const LOGGER = require("./services/logger.js");
-
+const payloaders = require("./services/payloaders.js");
 class BonkClient extends EventEmitter {
-  constructor(config) {
+  constructor() {
     super();
     this.WS = ws;
     this.client = {};
@@ -12,56 +12,66 @@ class BonkClient extends EventEmitter {
     this.count = 0;
     this.logger = undefined;
     this.TOOL = new tools(this.logger);
+    this.logged = false;
     // this.adminAccounts = new Set(["Error_504"]);
   }
 
-  async login(bclient) {
-    try {
-      this.logger = new LOGGER({
-        logLevel: bclient?.config?.LOG_LEVELS || "INFO",
-      });
+async auth(bclient = {}) {
+  if (this.logged) {
+    this.logger?.log?.("WARN", "Apenas um usuário por Client!");
+    return;
+  }
 
-      const res = await this.TOOL.login(bclient.username, bclient.password);
-      this.client = {
-        token: res.token,
-        username: res.username,
-        avatar: bclient.avatar || { layers: [], bc: 4492031 },
+
+  if (!this.logger) {
+    const level = bclient.config?.LOG_LEVELS ?? "WARN";
+    this.logger = new LOGGER({ logLevel: level });
+  }
+
+
+  const {
+    username = "BOT",
+    password,
+    avatar = { layers: [], bc: 4492031 },
+  } = bclient;
+
+  try {
+  
+    if (!password) {
+      this.client = payloaders({
+        guestName: username,
+        avatar,
+        guest: true,
+        version: 49,
+      }, this.TOOL);
+    } else {
+      const { token, username: realUsername } =
+        await this.TOOL.login(username, password);
+
+        this.client = payloaders({
+        token,
+        username: realUsername,
+        avatar,
         guest: false,
         version: 49,
-      };
-
-      // if (this.adminAccounts.has(res.username)) {
-      //   this.logger.log("INFO", `[Admin] Conta admin detectada: ${res.username}`);
-      // }
-
-      this.logger?.log?.("INFO", "[BonkClient] Usuário autenticado com sucesso");
-      this.emit("ready", {
-        setAdressByUrl: this.setAdressByUrl.bind(this),
-        setAdressByName: this.setAdressByName.bind(this),
-        connect: this.connect.bind(this),
-        // addAdminAccount: this.addAdminAccount.bind(this),
-        // removeAdminAccount: this.removeAdminAccount.bind(this),
-        // isAdminAccount: this.isAdminAccount.bind(this),
-        // listAdminAccounts: this.listAdminAccounts.bind(this),
-      });
-    } catch (e) {
-      this.logger.log("ERROR", `[BonkClient] Erro de login: ${e.message}`);
-      throw e;
+      }, this.TOOL);
     }
-  }
 
-  _createServerPayload(serverAddress, server) {
-    const payload = {
-      ...this.client,
-      bypass: "",
-      joinID: serverAddress,
-      dbid: 2,
-      roomPassword: "",
-      peerID: this.TOOL.generatePeerId(),
-    };
-    delete payload.username;
-    return { server, payload };
+    this.logged = true;
+    this.logger.log("INFO", "[BonkClient] Usuário autenticado com sucesso!");
+
+  
+    this.emit("ready", {
+      setAdressByUrl: this.setAdressByUrl.bind(this),
+      setAdressByName: this.setAdressByName.bind(this),
+      connect: this.connect.bind(this),
+    });
+  } catch (err) {
+    this.logger.log("ERROR", `[BonkClient] Erro de login: ${err.message}`);
+    throw err; 
   }
+}
+
 
   async connect(room) {
     try {
@@ -135,7 +145,7 @@ wsInstance.emitter.on("C_PLAYER_LEFT_TYPES", (ctx) => {
       }
 
       this.logger.log("INFO", `[BonkClient] Sala encontrada: ${code}`);
-      return this._createServerPayload(server.address, server.server);
+      return this.client.joinServerPayload(server.address, server.server);
     } catch (e) {
       this.logger.log("WARN", `[BonkClient] Erro na conexão: ${e.message}`);
       throw e;
@@ -172,7 +182,7 @@ wsInstance.emitter.on("C_PLAYER_LEFT_TYPES", (ctx) => {
         "INFO",
         `[BonkClient] Sala encontrada: "${roomName}" (ID: ${selectedRoom.id})`
       );
-      return this._createServerPayload(server.address, server.server);
+      return this.client.joinServerPayload(server.address, server.server);
     } catch (e) {
       this.logger.log(
         "WARN",
@@ -225,14 +235,14 @@ wsInstance.emitter.on("C_PLAYER_LEFT_TYPES", (ctx) => {
   }
 }
 
-BonkClient.prototype.setAdressByUrl = BonkClient.validateToken(
-  BonkClient.prototype.setAdressByUrl
-);
-BonkClient.prototype.setAdressByName = BonkClient.validateToken(
-  BonkClient.prototype.setAdressByName
-);
-BonkClient.prototype.connect = BonkClient.validateToken(
-  BonkClient.prototype.connect
-);
+// BonkClient.prototype.setAdressByUrl = BonkClient.validateToken(
+//   BonkClient.prototype.setAdressByUrl
+// );
+// BonkClient.prototype.setAdressByName = BonkClient.validateToken(
+//   BonkClient.prototype.setAdressByName
+// );
+// BonkClient.prototype.connect = BonkClient.validateToken(
+//   BonkClient.prototype.connect
+// );
 
 module.exports = BonkClient;

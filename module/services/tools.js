@@ -128,11 +128,11 @@ class TOOLS {
     return this.get("combinedplayercount.txt");
   }
 
-  
-
-  generatePeerId() {
+    generatePeerId() {
     return Math.random().toString(36).substr(2, 10) + "v00000";
   }
+
+
 }
 
 module.exports = TOOLS;

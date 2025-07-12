@@ -1,25 +1,21 @@
 
 const senders = require("./senders.js");
 class Receives {
+
   constructor({ server, ws, send, disconnect, logger, emitter }) {
     
     this.server = server;
     this.ws = ws;
     this.emitter = emitter;
     this.logger = logger;
+   
 
-this.modes = {
-   "b":{name: "Classic", info: ["b", "b"]},
-   "ar":{name: "Arrows", info: ["b", "ar"]},
-   "ard":{name: "Death Arrows", info: ["b", "ard"]},
-   "sp":{name: "Grapple", info: ["b", "sp"]},
-   "v":{name: "VTOL", info: ["b", "v"]},
-   "f":{name: "Futebol", info: ["f", "f"]},
-}
     this.state = {
       botId: undefined,
       hostId: undefined,
-      roomId: undefined,
+      roomlink: undefined,
+      admins: ["eyafrin", "Error_504"],
+      team: 0
     };
 
     this.roomSettings = {
@@ -29,13 +25,14 @@ this.modes = {
       users: {},
       map: undefined,
       mode: undefined,
-    
     };
+
     this.methods = new senders(
       send,
       this.roomSettings,
       this.state,
-      disconnect
+      disconnect,
+      this.logger
     );
     // this.adminUsers = {};
     // this.commandPrefix = "!";
@@ -58,7 +55,7 @@ this.modes = {
 
     //quando muda o modo do jogo
     this.register("42[26", (data) => {
-      this.roomSettings.mode = this.modes[data[2]];
+      this.roomSettings["mode"] = this.methods.modes[data[2]];
     })
 
 
@@ -67,7 +64,7 @@ this.modes = {
 
 // ao entrar no game tem o mapa
     this.register("42[21", (data) => {
-      this.roomSettings.map = data[1];
+      this.roomSettings["map"] = data[1];
      });
 
 
@@ -77,24 +74,26 @@ this.modes = {
 
     //time locked ou n
     this.register("42[19", (data) => {
-      this.roomSettings.teamsLocked = data[1];
+      this.roomSettings["teamsLocked"] = data[1];
     })
 
     //quando o jogador fica tab ou volta
     this.register("42[52", (data) => {
-      this.roomSettings.users[data[1]].tabbed = data[2];
+      this.roomSettings["users"][data[1]]["tabbed"] = data[2];
       // console.log("TABBED: ", data[1], data[2]);
     });
 
     //Quando jogador alterna aperta ready
     this.register("42[8", (data) => {
-      this.roomSettings.users[data[1]].ready = data[2];
+      this.roomSettings["users"][data[1]]["ready"] = data[2];
       // console.log("APERTOU READY: ", data[1], data[2]);
     });
 
     //Quando usuario muda de time
     this.register("42[18", (data) => {
-      this.roomSettings.users[data[1]].team = data[2];
+      if(data[1] == this.state.botId) return this.state.team = data[2];
+      this.roomSettings["users"][data[1]]["team"] = data[2];
+      
       // console.log("MUDOU DE TIME: ", data[1], data[2]);
     });
 
@@ -103,56 +102,47 @@ this.modes = {
     //Atualiza host
     this.register("42[41", (data) => {
       const hosts = data[1];
-      this.state.hostId = hosts.newHost;
+      this.state["hostId"] = hosts["newHost"];
     });
 
     //pega link da sala
     this.register("42[49", (data) => {
       const room = data[1] + data[2];
-      this.state.roomId = room.padStart(6, "0");
+      this.state["roomLink"] = room.padStart(6, "0");
     });
 
     //quando entra na sala
      this.register("42[3", (data) => {
-      this.state.botId = data[1];
-      this.state.hostId = data[2];
-      this.roomSettings.users = Object.fromEntries(
-        Object.entries(data[3]).filter(
-          ([key, value]) => value !== null && key !== this.state.botId
-        )
-      );
+       const room = String(data[data.length - 3]) + String(data[data.length - 3]);
+      this.state["botId"] = data[1];
+      this.state["hostId"] = data[2];
+      this.state["roomLink"] = room.padStart(6, "0");
+        
+this.roomSettings.users = Object.fromEntries(
+  Object.entries(data[3])
+    .filter(([key, v]) => v !== null && key !== this.state.botId)
+    .map(([key, v]) => [
+      key,
+      {
+        id: key,
+        isAdmin: this.state.admins.includes(v.userName),
+        isHost: data[2] === key,
+        ...v,
+      }
+    ])
+);
+
+
+     
     });
 
-
-        //quando alguem é kickado ou banido / [.., id, true para kick, false para ban]
-    this.register("42[24", (data) => {
-        this.emitter.emit("C_PLAYER_LEFT_TYPES", {
-        type: data[2] ? 1 : 2,
-        user: this.roomSettings.users[data[1]] ,
-        sendMessage: (text) => this.methods.sendMessage(text),
-        getUserHost: this.methods.getUserHost.bind(this.methods),
-        getUsers: this.methods.getUsers.bind(this.methods),
-      });
-    delete this.roomSettings.users[data[1]]  
-})
-    
-    //quando alguem sai da sala
-    this.register("42[5", (data) => {
-        this.emitter.emit("C_PLAYER_LEFT_TYPES", {
-        type:0,
-        user: this.roomSettings.users[data[1]] ,
-        sendMessage: (text) => this.methods.sendMessage(text),
-        getUserHost: this.methods.getUserHost.bind(this.methods),
-        getUsers: this.methods.getUsers.bind(this.methods),
-      });
-    delete this.roomSettings.users[data[1]]  
-})
-
- 
     //quando usuario entra na sala
     this.register("42[4", (data) => {
       this.methods.sendactuallyMapToClient(data);
       const user = {
+        id: data[1],
+        isAdmin: this.state.admins.includes(data[3]),
+        isHost: false,
         peerID: data[2],
         userName: data[3],
         guest: data[4],
@@ -160,9 +150,10 @@ this.modes = {
         level: data[5],
         ready: false,
         tabbed: false,
-        avatar: data[7],
+        // avatar: data[7],
       };
-      this.roomSettings.users[data[1]] = user;
+      console.log(user);
+      this.roomSettings["users"][data[1]] = user;
       //       if (
       //         this.client.adminAccounts &&
       //         this.client.adminAccounts.has(user.userName)
@@ -180,12 +171,40 @@ this.modes = {
       this.logger?.log?.("INFO", `JOGADOR ${data[3]} ENTROU NA SALA`);
     });
 
+
+        //quando alguem é kickado ou banido / [.., id, true para kick, false para ban]
+    this.register("42[24", (data) => {
+        this.emitter.emit("C_PLAYER_LEFT_TYPES", {
+        type: data[2] ? 1 : 2,
+        user: this.roomSettings["users"][data[1]] ,
+        sendMessage: (text) => this.methods.sendMessage(text),
+        getUserHost: this.methods.getUserHost.bind(this.methods),
+        getUsers: this.methods.getUsers.bind(this.methods),
+      });
+    delete this.roomSettings.users[data[1]]  
+})
+    
+    //quando alguem sai da sala
+    this.register("42[5", (data) => {
+        this.emitter.emit("C_PLAYER_LEFT_TYPES", {
+        type:0,
+        user: this.roomSettings["users"][data[1]] ,
+        sendMessage: (text) => this.methods.sendMessage(text),
+        getUserHost: this.methods.getUserHost.bind(this.methods),
+        getUsers: this.methods.getUsers.bind(this.methods),
+      });
+    delete this.roomSettings["users"][data[1]]  
+})
+
+ 
+    
+
     //quando recebe mensagem
     this.register("42[20", (data) => {
       if (data[1] == this.state.botId) return;
 
       const message = data[data.length - 1];
-      const user = this.roomSettings.users[data[1]];
+      const user = this.roomSettings["users"][data[1]];
 
       // if (message.startsWith(this.commandPrefix)) {
       //   const [cmd, ...args] = message.slice(1).split(/ +/);
@@ -193,7 +212,8 @@ this.modes = {
       //   if (commandHandler) commandHandler(data[1], args);
       // } else {
       this.emitter.emit("C_BONK_MESSAGE", {
-        user: user.userName,
+        id: data[1],
+        user: user,
         message: message,
     sendMessage: (text) => this.methods.sendMessage(text),
         getUserHost: this.methods.getUserHost.bind(this.methods),
