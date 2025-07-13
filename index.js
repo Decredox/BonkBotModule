@@ -1,6 +1,6 @@
 const BonkClient = require("./module/Client.js");
 const client = new BonkClient();
-client.addAdminsAccounts("Chaz","cappozin","Error_504","ZorrolokoOF CRZ","eyafrin", "cappo delas","xnef", "alguem");
+client.addAdminsAccounts("Chaz", "Error_504", "cappozin");
 
 // Configuração de tratamento global de erros
 process.on('uncaughtException', (err) => {
@@ -18,7 +18,7 @@ process.on('unhandledRejection', (err) => {
         connect - conect to server
         */
 client.on('ready', async (bot) => { 
-    const room = await bot.setAdressByUrl("https://bonk.io/187684");
+    const room = await bot.setAdressByUrl("https://bonk.io/164190");
     // console.log(room);
     await bot.connect(room);
 });
@@ -26,9 +26,9 @@ client.on('ready', async (bot) => {
 
 
 
-client.on('bonk_chat_message', async (chat) => {
-  console.log("user: ", chat.user);
-  console.log(chat.user.userName,chat.message);
+client.on("bonk_chat_message", async (chat) => {
+  const { message, user } = chat;       
+  console.log(user);
 });
 
 /*
@@ -63,8 +63,7 @@ client.on('bonk_player_banned', async (ctx) => {
 
 
   client.auth({
-    username: "cappo delas",
-    password: "Lucas@84403298",
+    username: "RoomManager",
     avatar: {
       layers: [
       { id: 13, scale: 0.06, angle: 0, x: 5.14, y: 4.86, flipX: false, flipY: false, color: 13558016 },
