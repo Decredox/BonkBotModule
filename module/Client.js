@@ -10,10 +10,10 @@ class BonkClient extends EventEmitter {
     this.client = {};
     this.servers = [];
     this.count = 0;
-    this.logger = undefined;
-    this.TOOL = new tools(this.logger);
+    this.logger = new LOGGER({ logLevel: "INFO" });
+    this.TOOL = undefined;
     this.logged = false;
-    // this.adminAccounts = new Set(["Error_504"]);
+    this.admins = new Set();
   }
 
 async auth(bclient = {}) {
@@ -23,12 +23,12 @@ async auth(bclient = {}) {
   }
 
 
-  if (!this.logger) {
-    const level = bclient.config?.LOG_LEVELS ?? "WARN";
+  if (bclient?.config?.LOG_LEVELS !== undefined) {
+    const level = bclient.config?.LOG_LEVELS;
     this.logger = new LOGGER({ logLevel: level });
   }
-
-
+  
+this.TOOL = tools(this.logger);
   const {
     username = "BOT",
     password,
@@ -45,12 +45,14 @@ async auth(bclient = {}) {
         version: 49,
       }, this.TOOL);
     } else {
-      const { token, username: realUsername } =
+      const res =
         await this.TOOL.login(username, password);
-
+     if(res.r == "fail"){
+      throw new Error(res.e);
+     }
         this.client = payloaders({
-        token,
-        username: realUsername,
+        token:res.token,
+        username: res.userName,
         avatar,
         guest: false,
         version: 49,
@@ -84,7 +86,8 @@ async auth(bclient = {}) {
         room.server,
         room.payload,
         this.logger,
-        this
+        this,
+        this.admins
       );
 
       //EVENTS
@@ -192,37 +195,37 @@ wsInstance.emitter.on("C_PLAYER_LEFT_TYPES", (ctx) => {
     }
   }
 
-  // addAdminAccount(username) {
-  //   if (typeof username === 'string' && username.trim()) {
-  //     this.adminAccounts.add(username.trim());
-  //     this.logger.log("INFO", `[Admin] Conta adicionada: ${username}`);
-  //     return true;
-  //   }
-  //   return false;
-  // }
+  //ADMINS
+  addAdminsAccounts(...usernames) {
+    if (arguments.length == 0) return this.logger.log("ERROR","[Admin] Nenhuma conta passada como parametro");
+     for(const username of usernames){
+      if(typeof username !== "string" && !username.trim()) return false;
+      this.admins.add(username.trim());
+      this.logger.log("INFO", `[Admin] Conta Adicionada: ${username}`);
+     }
+      return this.logger.log("INFO", `[Admin] Contas Adicionadas com exito`)
+  }
 
-  // removeAdminAccount(username) {
-  //   if (typeof username === 'string' && username.trim()) {
-  //     const result = this.adminAccounts.delete(username.trim());
-  //     if (result) {
-  //       this.logger.log("INFO", `[Admin] Conta removida: ${username}`);
-  //     }
-  //     return result;
-  //   }
-  //   return false;
-  // }
+  
 
-  //   isAdminAccount(username) {
-  //     return this.adminAccounts.has(username);
-  //   }
+  removeAdminAccount(username) {
+    if (typeof username === 'string' && username.trim()) {
+      const result = this.admins.delete(username.trim());
+      if (result) {
+        this.logger.log("INFO", `[Admin] Conta removida: ${username}`);
+      }
+      return true;
+    }
+    return false;
+  }
 
-  //   listAdminAccounts() {
-  //     return Array.from(this.adminAccounts);
-  //   }
 
-  //   getAdminAccounts() {
-  //     return Array.from(this.adminAccounts);
-  //   }
+
+     listAdminAccounts() {
+       return Array.from(this.admins);
+     }
+
+
 
   static validateToken(fn) {
     return async function (...args) {

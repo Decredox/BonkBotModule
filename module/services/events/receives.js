@@ -2,19 +2,20 @@
 const senders = require("./senders.js");
 class Receives {
 
-  constructor({ server, ws, send, disconnect, logger, emitter }) {
+  constructor({ server, ws, send, disconnect, logger, emitter, admins }) {
     
     this.server = server;
     this.ws = ws;
     this.emitter = emitter;
     this.logger = logger;
+    this.admins = admins;
    
 
     this.state = {
       botId: undefined,
       hostId: undefined,
       roomlink: undefined,
-      admins: ["eyafrin", "Error_504"],
+      admins: this.admins,
       team: 0
     };
 
@@ -125,23 +126,23 @@ this.roomSettings.users = Object.fromEntries(
       key,
       {
         id: key,
-        isAdmin: this.state.admins.includes(v.userName),
+        isAdmin: this.state.admins.has(v.userName),
         isHost: data[2] === key,
         ...v,
       }
     ])
 );
 
-
      
     });
 
     //quando usuario entra na sala
     this.register("42[4", (data) => {
-      this.methods.sendactuallyMapToClient(data);
+      
+      // this.methods.sendactuallyMapToClient(data);
       const user = {
         id: data[1],
-        isAdmin: this.state.admins.includes(data[3]),
+        isAdmin: this.state.admins.has(data[3]),
         isHost: false,
         peerID: data[2],
         userName: data[3],
@@ -150,9 +151,9 @@ this.roomSettings.users = Object.fromEntries(
         level: data[5],
         ready: false,
         tabbed: false,
-        // avatar: data[7],
+        avatar: data[7],
       };
-      console.log(user);
+     
       this.roomSettings["users"][data[1]] = user;
       //       if (
       //         this.client.adminAccounts &&
@@ -174,25 +175,36 @@ this.roomSettings.users = Object.fromEntries(
 
         //quando alguem é kickado ou banido / [.., id, true para kick, false para ban]
     this.register("42[24", (data) => {
+     const user_id = data[1];
+     const user = this.roomSettings["users"][user_id];
+
+     const type = data[2] ? 1 : 2;
         this.emitter.emit("C_PLAYER_LEFT_TYPES", {
-        type: data[2] ? 1 : 2,
-        user: this.roomSettings["users"][data[1]] ,
+        type,
+        user,
         sendMessage: (text) => this.methods.sendMessage(text),
         getUserHost: this.methods.getUserHost.bind(this.methods),
         getUsers: this.methods.getUsers.bind(this.methods),
       });
-    delete this.roomSettings.users[data[1]]  
+      this.logger?.log?.("INFO", `JOGADOR ${user.userName} ${data?.[2] ? "FOI KICKADO" : "FOI BANIDO"} DA SALA!`);
+
+    delete this.roomSettings["users"][user_id];
 })
     
     //quando alguem sai da sala
     this.register("42[5", (data) => {
+      const user_id = data[1];
+     const user = this.roomSettings["users"][user_id];
+     if(user == undefined)return;
         this.emitter.emit("C_PLAYER_LEFT_TYPES", {
         type:0,
-        user: this.roomSettings["users"][data[1]] ,
+        user,
         sendMessage: (text) => this.methods.sendMessage(text),
         getUserHost: this.methods.getUserHost.bind(this.methods),
         getUsers: this.methods.getUsers.bind(this.methods),
       });
+      this.logger?.log?.("INFO", `JOGADOR ${user.userName} SAIU DA SALA!`);
+
     delete this.roomSettings["users"][data[1]]  
 })
 
@@ -498,7 +510,7 @@ ${this.roomSettings.roomLocked ? '🔒' : '🔓'} Sala trancada`);
   execute(command, data) {
     const handler = this.handlers.get(command);
     if (handler) handler(data);
-    else this.logger?.log("WARN", `Handler não encontrado: ${command}`);
+    // else this.logger?.log("WARN", `Handler não encontrado: ${command}`);
   }
 }
 

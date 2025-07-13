@@ -2,7 +2,7 @@ const WebSocket = require("ws");
 // const EventEmitter = require("events");
 const receives = require("./events/receives.js");
 class WEBSOCKET {
-  constructor(wsID, server, roomData, logger, emitter) {
+  constructor(wsID, server, roomData, logger, emitter,admins) {
     this.server = {wsID, server};
     this.roomData = roomData;
     this.ws = null;
@@ -10,6 +10,7 @@ class WEBSOCKET {
     this.ping = null;
     this.logger = logger;
     this.emitter = emitter;
+    this.admins = admins;
   }
 
   async connect() {
@@ -34,10 +35,15 @@ class WEBSOCKET {
           disconnect: this.disconnect.bind(this),
           logger: this.logger,
           emitter: this.emitter,
-          
+          admins: this.admins,
         });
+  
+   
 
-        this.ping = setInterval(() => this.send(40), 10000);
+  
+        this.ping = setInterval(() => {
+          this.send(40)
+        }, 10000);
         this.logger.log("INFO", "[BonkWebSocket] Conectado com sucesso!");
         resolve();
       });
@@ -50,9 +56,9 @@ class WEBSOCKET {
           const payload = JSON.parse(messageStr.replace(/^[^\[]*\[/, "["));
           const matchCMD = messageStr.match(/^(\d+\[\d+)/);
           const command = matchCMD ? matchCMD[1] : null;
-          console.log(messageStr);
+          // console.log(messageStr);
           if (command) this.receives.execute(command, payload);
-          else this.logger.log("WARN", `Handler desconhecido: ${messageStr}`);
+          // else this.logger.log("WARN", `Handler desconhecido: ${messageStr}`);
         } catch (e) {
           this.logger.log("ERROR", `Erro ao processar mensagem: ${e.message}`);
         }

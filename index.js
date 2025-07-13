@@ -1,5 +1,6 @@
 const BonkClient = require("./module/Client.js");
 const client = new BonkClient();
+client.addAdminsAccounts("Chaz","cappozin","Error_504","ZorrolokoOF CRZ","eyafrin", "cappo delas","xnef", "alguem");
 
 // Configuração de tratamento global de erros
 process.on('uncaughtException', (err) => {
@@ -17,7 +18,8 @@ process.on('unhandledRejection', (err) => {
         connect - conect to server
         */
 client.on('ready', async (bot) => { 
-    const room = await bot.setAdressByUrl("https://bonk.io/621184")
+    const room = await bot.setAdressByUrl("https://bonk.io/187684");
+    // console.log(room);
     await bot.connect(room);
 });
 
@@ -25,6 +27,7 @@ client.on('ready', async (bot) => {
 
 
 client.on('bonk_chat_message', async (chat) => {
+  console.log("user: ", chat.user);
   console.log(chat.user.userName,chat.message);
 });
 
@@ -47,12 +50,11 @@ client.on('bonk_player_join', async (ctx) => {
         */
 client.on('bonk_player_left', async (ctx) => {
   ctx.sendMessage(ctx.user.userName + " SAIU do servidor!")
-     
 });
 
 
 client.on('bonk_player_kicked', async (ctx) => {
-  ctx.sendMessage(ctx.user.userName + " foi KICKADO do servidor!")
+ ctx.sendMessage(ctx.user.userName + " foi KICKADO do servidor!")
 });
 
 client.on('bonk_player_banned', async (ctx) => {
@@ -61,8 +63,8 @@ client.on('bonk_player_banned', async (ctx) => {
 
 
   client.auth({
-    username: "RoomManager",
-    // password: "mR#84vX2!qLp@Zu9Wd",
+    username: "cappo delas",
+    password: "Lucas@84403298",
     avatar: {
       layers: [
       { id: 13, scale: 0.06, angle: 0, x: 5.14, y: 4.86, flipX: false, flipY: false, color: 13558016 },
