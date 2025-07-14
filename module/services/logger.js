@@ -1,52 +1,44 @@
-class LOGGER {
-  static LOG_LEVELS = {
-    DEBUG: "DEBUG",
-    INFO: "INFO",
-    WARN: "WARN",
-    ERROR: "ERROR",
-    NONE: "NONE",
+
+function LOGGER({ logLevel = 'INFO' } = {}) {
+  const LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3, NONE: 4 };
+  const COLORS = {
+    DEBUG: '\x1b[36m',
+    INFO:  '\x1b[32m',
+    WARN:  '\x1b[33m',
+    ERROR: '\x1b[31m',
+    RESET: '\x1b[0m',
   };
 
-  static COLORS = {
-    DEBUG: "\x1b[36m",
-    INFO: "\x1b[32m",
-    WARN: "\x1b[33m",
-    ERROR: "\x1b[31m",
-    RESET: "\x1b[0m",
+  let currentLevel = LEVELS[logLevel] ?? LEVELS.INFO;
+
+
+  function log(levelName, message, { timestamp = true } = {}) {
+    const levelNum = LEVELS[levelName];
+    if (levelNum === undefined) {
+      console.warn('[WARN] Level invalido passado para a funçao!');
+      return;
+    }
+    if (currentLevel === LEVELS.NONE || levelNum < currentLevel) return;
+
+    const color = COLORS[levelName] ?? '';
+    const reset = COLORS.RESET;
+    const prefix = timestamp ? `${new Date().toISOString()} ` : '';
+
+    console.log(`${color}[${levelName}]${reset} ${prefix}${message}`);
+  }
+
+  return {
+    LEVELS: Object.keys(LEVELS),
+    setConfig({ logLevel } = {}) {
+      if (logLevel in LEVELS) currentLevel = LEVELS[logLevel];
+      else console.warn('[WARN] LOGLEVEL INVALIDO PASSADO COMO PARAMETRO.');
+    },
+    debug: (msg, opt) => log('DEBUG', msg, opt),
+    info:  (msg, opt) => log('INFO',  msg, opt),
+    warn:  (msg, opt) => log('WARN',  msg, opt),
+    error: (msg, opt) => log('ERROR', msg, opt),
+    log,                                      
   };
-
-  constructor(config = { logLevel: LOGGER.LOG_LEVELS.INFO }) {
-    this.config = {
-      logLevel: LOGGER.LOG_LEVELS.INFO,
-      ...config,
-    };
-  }
-
-  setConfig(config) {
-    if (
-      config?.logLevel &&
-      Object.values(LOGGER.LOG_LEVELS).includes(config.logLevel)
-    ) {
-      this.config.logLevel = config.logLevel;
-    } else {
-      console.warn("[WARN] Invalid logLevel passed to setConfig().");
-    }
-  }
-
-  log(level, message) {
-    const levels = Object.keys(LOGGER.LOG_LEVELS);
-    const currentLevelIndex = levels.indexOf(this.config.logLevel);
-    const messageLevelIndex = levels.indexOf(level);
-
-    if (
-      this.config.logLevel !== LOGGER.LOG_LEVELS.NONE &&
-      messageLevelIndex >= currentLevelIndex
-    ) {
-      const color = LOGGER.COLORS[level] || "";
-      const reset = LOGGER.COLORS.RESET;
-      console.log(`${color}[${level}]${reset} ${message}`);
-    }
-  }
 }
 
 module.exports = LOGGER;

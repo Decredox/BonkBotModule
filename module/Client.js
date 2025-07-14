@@ -10,7 +10,7 @@ class BonkClient extends EventEmitter {
     this.client = {};
     this.servers = [];
     this.count = 0;
-    this.logger = new LOGGER({ logLevel: "INFO" });
+    this.logger = LOGGER({ logLevel: "INFO" });
     this.TOOL = undefined;
     this.logged = false;
     this.admins = new Set();

@@ -117,6 +117,7 @@ class Receives {
        const room = String(data[data.length - 3]) + String(data[data.length - 3]);
       this.state["botId"] = data[1];
       this.state["hostId"] = data[2];
+    
       this.state["roomLink"] = room.padStart(6, "0");
         
 this.roomSettings.users = Object.fromEntries(
@@ -125,9 +126,9 @@ this.roomSettings.users = Object.fromEntries(
     .map(([key, v]) => [
       key,
       {
-        id: key,
+        id: Number(key),
         isAdmin: this.state.admins.has(v.userName),
-        isHost: data[2] === key,
+        isHost: Number(key) === Number(data[2]),
         ...v,
       }
     ])
@@ -141,7 +142,7 @@ this.roomSettings.users = Object.fromEntries(
       
       // this.methods.sendactuallyMapToClient(data);
       const user = {
-        id: data[1],
+        id: Number(data[1]),
         isAdmin: this.state.admins.has(data[3]),
         isHost: false,
         peerID: data[2],
@@ -224,7 +225,7 @@ this.roomSettings.users = Object.fromEntries(
       //   if (commandHandler) commandHandler(data[1], args);
       // } else {
       this.emitter.emit("C_BONK_MESSAGE", {
-        id: data[1],
+        id: Number(data[1]),
         user: user,
         message: message,
     sendMessage: (text) => this.methods.sendMessage(text),
