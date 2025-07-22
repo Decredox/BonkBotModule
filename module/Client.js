@@ -67,6 +67,7 @@ this.TOOL = tools(this.logger);
       setAdressByUrl: this.setAdressByUrl.bind(this),
       setAdressByName: this.setAdressByName.bind(this),
       connect: this.connect.bind(this),
+      joinRoom: this.joinRoom.bind(this)
     });
   } catch (err) {
     this.logger.log("ERROR", `[BonkClient] Erro de login: ${err.message}`);
@@ -74,17 +75,18 @@ this.TOOL = tools(this.logger);
   }
 }
 
-
-  async connect(room) {
+  async connect(serverCode = "b2brazil1") {
+    // if (server === undefined)return  "";
     try {
-      if (!room) {
+      if (!serverCode) {
         throw new Error("[BonkClient] Nenhuma sala inserida!");
       }
+      // console.log(serverCode);
+  serverCode = typeof serverCode === "object" ? serverCode.server : serverCode;
       const count = this.count++;
-      const wsInstance = new this.WS(
+      const wsInstance = new this.WS( 
         count,
-        room.server,
-        room.payload,
+        serverCode,
         this.logger,
         this,
         this.admins
@@ -92,9 +94,11 @@ this.TOOL = tools(this.logger);
 
       //EVENTS
       wsInstance.emitter.on("C_BONK_MESSAGE", (ctx) => {
+          // console.log(ctx, this.servers[0]);
         this.emit("bonk_chat_message", ctx);
       });
       wsInstance.emitter.on("C_PLAYER_JOIN", (ctx) => {
+     
         this.emit("bonk_player_join", ctx);
       });
             wsInstance.emitter.on("C_PLAYER_LEFT", (ctx) => {
@@ -114,19 +118,46 @@ wsInstance.emitter.on("C_PLAYER_LEFT_TYPES", (ctx) => {
     fn(wsInstance.emitter, ctx);
 });
 
-
-
-      this.servers.push({ id: count, s: wsInstance });
+ const server = { id: count, s: wsInstance, connects: 0 };
+      this.servers.push(server);
       await wsInstance.connect();
 
-      return wsInstance;
+      return server;
     } catch (e) {
       this.logger.log("ERROR", `Erro ao conectar ao websocket: ${e.message}`);
       throw e;
     }
   }
+async joinRoom(room) {
+    try {
+      if (!room) {
+        throw new Error("[BonkClient] Nenhuma sala inserida!");
+      }
 
-  async setAdressByUrl(roomLink) {
+      let ws = this.servers
+      .filter(server => server === room.server)
+      .reduce((menor, value) => !menor || value.connects < menor.connects ? value : menor, null);
+      if(!ws){
+        this.logger.log("WARN", "Nenhum servidor WS conectado! Criando um...");
+        const createdServer = await this.connect(room.server);
+        ws = this.servers.find(item => item.id === createdServer.id);
+        this.logger.log("INFO", "Servidor WS conectado com exito!")
+      }
+      ws.connects += 1;
+      await ws.s.ws.send(`42[13, ${JSON.stringify(room.payload)}]`);
+      this.logger.log("INFO",`BOT ${room.payload.userName ?? room.payload.guestName} Entrou na sala.`)
+      return ws;
+    } catch (e) {
+      this.logger.log("ERROR", `Erro ao conectar ao entrar na sala: ${e.message}`);
+      throw e;
+    }
+  }
+// async createRoom(opts) {
+// return opts;
+// }
+
+  //proucurar a sala
+  async setAdressByUrl(roomLink, opts) {
     try {
       const regex =
         /(?:https?:\/\/)?bonk\.io\/(?:#?)([a-zA-Z0-9]{6,})|\b([a-zA-Z0-9]{6,})\b/;
@@ -148,14 +179,14 @@ wsInstance.emitter.on("C_PLAYER_LEFT_TYPES", (ctx) => {
       }
 
       this.logger.log("INFO", `[BonkClient] Sala encontrada: ${code}`);
-      return this.client.joinServerPayload(server.address, server.server);
+      return this.client.joinServerPayload(server.address, server.server, opts);
     } catch (e) {
       this.logger.log("WARN", `[BonkClient] Erro na conexão: ${e.message}`);
       throw e;
     }
   }
 
-  async setAdressByName(roomName) {
+  async setAdressByName(roomName, opts) {
     try {
       this.logger.log("INFO", `Buscando sala por nome: "${roomName}"`);
       const rooms = await this.TOOL.getAllRooms(this.client.token);
@@ -185,7 +216,7 @@ wsInstance.emitter.on("C_PLAYER_LEFT_TYPES", (ctx) => {
         "INFO",
         `[BonkClient] Sala encontrada: "${roomName}" (ID: ${selectedRoom.id})`
       );
-      return this.client.joinServerPayload(server.address, server.server);
+      return this.client.joinServerPayload(server.address, server.server, opts);
     } catch (e) {
       this.logger.log(
         "WARN",

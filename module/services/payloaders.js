@@ -1,11 +1,11 @@
   const payloaders = (client, TOOL) => ({
-  joinServerPayload: (serverAddress, server) => {
+  joinServerPayload: (serverAddress, server, p) => {
     const payload = {
       ...client,
       bypass: "",
       joinID: serverAddress,
       dbid: 2,
-      roomPassword: "",
+      roomPassword: p?.password || "",
       peerID: TOOL.generatePeerId(),
     };
     delete payload.username;

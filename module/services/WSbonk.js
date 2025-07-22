@@ -2,9 +2,9 @@ const WebSocket = require("ws");
 // const EventEmitter = require("events");
 const receives = require("./events/receives.js");
 class WEBSOCKET {
-  constructor(wsID, server, roomData, logger, emitter,admins) {
+  constructor(wsID, server, logger, emitter,admins) {
     this.server = {wsID, server};
-    this.roomData = roomData;
+    // this.roomData = roomData;
     this.ws = null;
     this.receives = null;
     this.ping = null;
@@ -27,7 +27,6 @@ class WEBSOCKET {
       );
 
       this.ws.on("open", () => {
-        this.send(`42[13, ${JSON.stringify(this.roomData)}]`);
         this.receives = new receives({
           server: this.server,
           ws: this.ws,
@@ -39,12 +38,10 @@ class WEBSOCKET {
         });
   
    
-
-  
         this.ping = setInterval(() => {
           this.send(40)
         }, 10000);
-        this.logger.log("INFO", "[BonkWebSocket] Conectado com sucesso!");
+        this.logger.log("INFO", "[BonkWebSocket] Conectado ao WS da sala com sucesso!");
         resolve();
       });
 

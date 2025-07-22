@@ -1,6 +1,6 @@
 const BonkClient = require("./module/Client.js");
-const client = new BonkClient();
-client.addAdminsAccounts("Chaz", "Error_504", "cappozin");
+const bonkClient = new BonkClient();
+bonkClient.addAdminsAccounts("Chaz", "Error_504", "cappozin");
 
 // Configuração de tratamento global de erros
 process.on('uncaughtException', (err) => {
@@ -17,52 +17,52 @@ process.on('unhandledRejection', (err) => {
         setAdressByName -  sets adress of room by url
         connect - conect to server
         */
-client.on('ready', async (bot) => { 
-    const room = await bot.setAdressByUrl("https://bonk.io/771277lhsbe");
-    // console.log(room);
-    await bot.connect(room);
+bonkClient.on('ready', async (client) => {
+    client.connect();
+    const room = await client.setAdressByUrl("https://bonk.io/172352");
+    await client.joinRoom(room);
 });
 
 
 
 
-client.on("bonk_chat_message", async (chat) => {
+bonkClient.on("bonk_chat_message", async (chat) => {
   const { message, user } = chat;       
   console.log(user);
 });
 
 /*
-      userJoined - return the username
+      user - return the use of the context
         sendMessage: method of send message
         getUserHost: method for get a userhost
         getUsers: method for get a players
 */
-client.on('bonk_player_join', async (ctx) => {
+bonkClient.on('bonk_player_join', async (ctx) => {
   ctx.sendMessage(ctx.user.userName + " Entrou no servidor! [LEVEL: "+ctx.user.level+"]")
 });
 
 
 /*
-        userLefted - return the username
+        user - return the username
         sendMessage - method of send message
         getUserHost - method for get a userhost
         getUsers - method for get a players
         */
-client.on('bonk_player_left', async (ctx) => {
+bonkClient.on('bonk_player_left', async (ctx) => {
   ctx.sendMessage(ctx.user.userName + " SAIU do servidor!")
 });
 
 
-client.on('bonk_player_kicked', async (ctx) => {
+bonkClient.on('bonk_player_kicked', async (ctx) => {
  ctx.sendMessage(ctx.user.userName + " foi KICKADO do servidor!")
 });
 
-client.on('bonk_player_banned', async (ctx) => {
+bonkClient.on('bonk_player_banned', async (ctx) => {
   ctx.sendMessage(ctx.user.userName + " foi BANIDO do servidor!")
 });
 
 
-  client.auth({
+  bonkClient.auth({
     username: "RoomManager",
     avatar: {
       layers: [
