@@ -55,7 +55,7 @@ const TOOLS = (logger) => ({
 		});
 	},
 
-	getRoomInfo: (roomId, g = "n") => {
+	getRoomInfo(roomId, g = "n") {
 		return this.post("getroomaddress.php", {
 			id: roomId,
 			g

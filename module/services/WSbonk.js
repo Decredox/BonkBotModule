@@ -11,6 +11,7 @@ class WEBSOCKET {
     this.logger = logger;
     this.emitter = emitter;
     this.admins = admins;
+    console.log(this.server.server);
   }
 
   async connect() {
@@ -23,6 +24,7 @@ class WEBSOCKET {
             Referer: "https://bonk.io/",
             "User-Agent": "Mozilla/5.0",
           },
+          rejectUnauthorized:false,
         }
       );
 
@@ -54,7 +56,9 @@ class WEBSOCKET {
           const matchCMD = messageStr.match(/^(\d+\[\d+)/);
           const command = matchCMD ? matchCMD[1] : null;
           // console.log(messageStr);
+
           if (command) this.receives.execute(command, payload);
+          
           // else this.logger.log("WARN", `Handler desconhecido: ${messageStr}`);
         } catch (e) {
           this.logger.log("ERROR", `Erro ao processar mensagem: ${e.message}`);

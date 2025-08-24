@@ -1,5 +1,6 @@
 
 const senders = require("./senders.js");
+const CODEC = require("./codec.js");
 class Receives {
 
   constructor({ server, ws, send, disconnect, logger, emitter, admins }) {
@@ -9,6 +10,7 @@ class Receives {
     this.emitter = emitter;
     this.logger = logger;
     this.admins = admins;
+    this.codec = CODEC;
    
 
     this.state = {
@@ -33,7 +35,8 @@ class Receives {
       this.roomSettings,
       this.state,
       disconnect,
-      this.logger
+      this.logger,
+      this.codec
     );
     // this.adminUsers = {};
     // this.commandPrefix = "!";
@@ -62,6 +65,10 @@ class Receives {
 
 
 
+  //AO mudar o mapa
+this.register("42[29", (data) => {
+ this.roomSettings["map"] = this.codec.decodeMap(data[1]);  
+})
 
 // ao entrar no game tem o mapa
     this.register("42[21", (data) => {
@@ -140,7 +147,7 @@ this.roomSettings.users = Object.fromEntries(
     //quando usuario entra na sala
     this.register("42[4", (data) => {
       
-      // this.methods.sendactuallyMapToClient(data);
+       this.methods.sendactuallyMapToClient(this.roomSettings.map);
       const user = {
         id: Number(data[1]),
         isAdmin: this.state.admins.has(data[3]),

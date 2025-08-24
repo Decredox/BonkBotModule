@@ -1,14 +1,12 @@
-const {
-   MapCodec,
-   SkinCodec
-} = require("./codec.js");
+
 class SENDERS {
-   constructor(send, roomSettings, state, disconnect, logger) {
+   constructor(send, roomSettings, state, disconnect, logger,codec) {
       this.send = send;
       this.roomSettings = roomSettings;
       this.state = state;
       this.disconnect = disconnect;
       this.logger = logger;
+      this.codec = codec;
       this.modes = {
          b: {
             name: "Classic",
@@ -81,16 +79,18 @@ class SENDERS {
 
    //hosts Actions
 
-      sendactuallyMapToClient(data) {
+
+      sendactuallyMapToClient(map) {
         
            if (this.roomSettings.hostId !== this.roomSettings.botId)
          return this.logger.log("ERROR", "Apenas host pode user este metodo!");
-      if (this.validate.isNumber(mode))
-         return this.logger.log("ERROR", "Apenas strings sao aceitos!");
+     
       this.send(
-         `42[11, ${this.stringifyPayload({
-        sid: data[2],
-        gs: this.roomSettings.map,
+         `42[23, ${this.stringifyPayload({
+            m: this.codec.encodeMap(map)
+
+      //   sid: data[2],
+      //   gs: this.roomSettings.map,
       })}]`,
       );
    }
@@ -232,6 +232,8 @@ class SENDERS {
       ["peerID", "avatar"].forEach((key) => delete userJson[key]);
       return userJson;
    }
+
+   
 }
 
 module.exports = SENDERS;
